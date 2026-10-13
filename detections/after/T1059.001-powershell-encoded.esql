@@ -1,0 +1,45 @@
+// TUNED "AFTER" RULE
+// Name:      Encoded PowerShell Command
+// Technique: T1059.001 Command and Scripting Interpreter: PowerShell
+// Before:    detections/before/T1059.001-powershell-encoded.esql
+//
+// WIDENED (fixes misses found by atomics T1059.001-15 and -17, which used -E and -e):
+//   - PowerShell accepts ANY prefix of -EncodedCommand (-e, -en, -enc ... -encodedcommand), and
+//     pwsh also accepts -ec. The old LIKE "*-enc*" missed -e and -E entirely.
+//   - Switch may start with / or a Unicode dash (en dash, em dash, horizontal bar), all of which
+//     PowerShell treats as "-".
+//   - Requires a base64-looking argument after the switch, so text like
+//     "-EncodedCommandParamVariation" does not match.
+//   - Matches on the PE OriginalFileName too, so a renamed powershell.exe is still caught.
+//
+// NARROWED - three known-benign sources, each excluded as tightly as its data allows:
+//   1. Contoso inventory agent: byte-identical command line every run -> exact command line
+//      + SYSTEM. Residual risk: whoever can edit inventory.ps1 inherits this exclusion.
+//      Verify the ACL on C:\ProgramData\ContosoIT\jobs (ProgramData is user-writable by default).
+//   2. Contoso printer report: exact command line + exact parent script + SYSTEM.
+//   3. Contoso RMM tool: payload is unique every run, so the command line cannot be pinned.
+//      Excluded by context: user it.admin + exact parent script. WEAKEST exclusion - a stolen
+//      it.admin account running through adminscript.ps1 is invisible to this rule. Compensate
+//      with 4104 script-block content rules, which this exclusion does not touch.
+//
+// NULL SAFETY: each exclusion is computed as a flag with COALESCE(..., false). A bare
+// WHERE NOT (process.parent.command_line == "...") evaluates to null when the parent is
+// missing, and ES|QL drops null rows - which would silently hide attacks with no parent info.
+FROM logs-windows.sysmon_operational-*
+| WHERE event.code == "1"
+    AND (process.name IN ("powershell.exe", "pwsh.exe")
+         OR process.pe.original_file_name IN ("PowerShell.EXE", "pwsh.dll"))
+| EVAL cl = TO_LOWER(process.command_line)
+| WHERE cl RLIKE """.*[ "][-/–—―](ec|e|en|enc|enco|encod|encode|encoded|encodedc|encodedco|encodedcom|encodedcomm|encodedcomma|encodedcomman|encodedcommand) +["']?[a-z0-9+/=]{16,}.*"""
+| EVAL is_inventory = COALESCE(
+        user.name == "SYSTEM"
+        AND process.command_line == """"powershell.exe" -NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -EncodedCommand JgAgAEMAOgBcAFAAcgBvAGcAcgBhAG0ARABhAHQAYQBcAEMAbwBuAHQAbwBzAG8ASQBUAFwAagBvAGIAcwBcAGkAbgB2AGUAbgB0AG8AcgB5AC4AcABzADEA""", false),
+       is_printer = COALESCE(
+        user.name == "SYSTEM"
+        AND process.parent.command_line == """"powershell.exe" -NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File C:\ProgramData\ContosoIT\jobs\reporttool.ps1"""
+        AND process.command_line LIKE """*-EncodedCommand RwBlAHQALQBDAGkAbQBJAG4AcwB0AGEAbgBjAGUAIABXAGkAbgAzADIAXwBQAHIAaQBuAHQAZQByACAAfAAgAEUAeABwAG8AcgB0AC0AQwBzAHYAIABDADoAXABQAHIAbwBnAHIAYQBtAEQAYQB0AGEAXABDAG8AbgB0AG8AcwBvAEkAVABcAGkAbgB2AGUAbgB0AG8AcgB5AFwAcAByAGkAbgB0AGUAcgBzAC4AYwBzAHYAIAAtAE4AbwBUAHkAcABlAEkAbgBmAG8AcgBtAGEAdABpAG8AbgA=*""", false),
+       is_rmm = COALESCE(
+        user.name == "it.admin"
+        AND process.parent.command_line == """"powershell.exe" -NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File C:\ProgramData\ContosoIT\jobs\adminscript.ps1""", false)
+| WHERE NOT (is_inventory OR is_printer OR is_rmm)
+| KEEP @timestamp, host.name, user.name, process.parent.name, process.command_line

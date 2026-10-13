@@ -1,0 +1,11 @@
+// LOOSE "BEFORE" RULE - deliberately naive. Do not deploy.
+// Name:      Scheduled Task Created via schtasks.exe
+// Technique: T1053.005 Scheduled Task/Job: Scheduled Task
+// Logic:     any schtasks.exe process whose command line contains /create
+// Why naive: single dimension, no exclusions, written without looking at our own data.
+//            Also blind by design to tasks created through the Task Scheduler API (no schtasks.exe).
+FROM logs-windows.sysmon_operational-*
+| WHERE event.code == "1"
+    AND process.name == "schtasks.exe"
+    AND TO_LOWER(process.command_line) LIKE "*/create*"
+| KEEP @timestamp, host.name, user.name, process.parent.name, process.command_line

@@ -1,0 +1,49 @@
+// TUNED "AFTER" RULE
+// Name:      Scheduled Task Created
+// Technique: T1053.005 Scheduled Task/Job: Scheduled Task
+// Before:    detections/before/T1053.005-schtasks-create.esql
+//
+// DATA SOURCE CHANGED: Sysmon process events (schtasks.exe /create) -> Security event 4698.
+//   The old rule watched one TOOL. Atomic T1053.005-4 used Register-ScheduledTask (Task Scheduler
+//   API), so schtasks.exe never ran and the old rule could not see it. 4698 records the OUTCOME
+//   - a task now exists - whichever tool made it. Requires audit policy "Other Object Access
+//   Events" (Success); check that is enabled fleet-wide before trusting this rule.
+//
+// KNOWN BLIND SPOT: overwriting an EXISTING task (schtasks /create /f, Set-ScheduledTask) logs
+//   4702 "updated", not 4698. An attacker who hijacks an existing task's action is invisible here.
+//   4702 is very noisy (Windows updates its own tasks constantly), so it needs its own rule that
+//   compares a task's action against its known-good baseline. Not built yet.
+//
+// EXCLUSIONS - anchored on what the task RUNS, not what it is called (names are attacker-chosen):
+//   1. Contoso backup verify: everything pinned except the timestamp, which must be digits in
+//      exactly that shape ("template match"). Created by svc_backup only.
+//   2. Windows SoftLanding (tips/notifications): no executable at all, only one of two known
+//      built-in COM handler CLSIDs. A COM-handler task with any other CLSID still alerts.
+//   3. Google Updater: action must be updater.exe under Program Files (admin-only writable),
+//      created by the machine account (SYSTEM).
+//
+// Regex note: a literal " cannot end a triple-quoted ES|QL string, so quote characters in the
+// patterns below are matched with "." (any single character).
+// NULL SAFETY: exclusion flags use COALESCE(..., false) - see the T1059.001 after rule.
+FROM logs-system.security-*
+| WHERE event.code == "4698"
+| GROK winlog.event_data.TaskContent "<Command>%{DATA:task_cmd}</Command>"
+| GROK winlog.event_data.TaskContent "<Arguments>%{DATA:task_args}</Arguments>"
+| GROK winlog.event_data.TaskContent "<ClassId>%{DATA:task_clsid}</ClassId>"
+| EVAL task_name = winlog.event_data.TaskName,
+       creator   = winlog.event_data.SubjectUserName
+| EVAL is_backup = COALESCE(
+        creator == "svc_backup"
+        AND task_name RLIKE """\\ContosoBackupVerify_[0-9]{12}"""
+        AND task_cmd == "powershell.exe"
+        AND task_args RLIKE """-NoProfile -WindowStyle Hidden -Command .Get-ChildItem 'C:\\ProgramData\\ContosoIT\\backup\\staging-[0-9]{8}-[0-9]{6}' \| Measure-Object \| Out-Null.""", false),
+       is_softlanding = COALESCE(
+        task_name LIKE """\\SoftLanding\\S-1-5-21-*"""
+        AND task_cmd IS NULL
+        AND task_clsid IN ("{F47D8C53-0B74-4A66-959D-367710AB1F84}", "{AF28889E-B0FD-494C-9FB0-D3B058A96B34}"), false),
+       is_google = COALESCE(
+        creator LIKE "*$"
+        AND task_cmd RLIKE """.C:\\Program Files \(x86\)\\Google\\GoogleUpdater\\[0-9.]+\\updater\.exe.""", false)
+| WHERE NOT (is_backup OR is_softlanding OR is_google)
+| EVAL process.command_line = CONCAT(COALESCE(task_name, "?"), "  ->  ", COALESCE(task_cmd, CONCAT("COM ", task_clsid), "?"), " ", COALESCE(task_args, ""))
+| KEEP @timestamp, host.name, creator, task_name, task_cmd, task_args, process.command_line

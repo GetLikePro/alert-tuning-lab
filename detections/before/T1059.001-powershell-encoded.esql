@@ -1,0 +1,10 @@
+// LOOSE "BEFORE" RULE - deliberately naive. Do not deploy.
+// Name:      Encoded PowerShell Command
+// Technique: T1059.001 Command and Scripting Interpreter: PowerShell
+// Logic:     any powershell.exe launched with -enc / -EncodedCommand
+// Why naive: single dimension, no exclusions. Legitimate management tools encode constantly.
+FROM logs-windows.sysmon_operational-*
+| WHERE event.code == "1"
+    AND process.name == "powershell.exe"
+    AND TO_LOWER(process.command_line) LIKE "*-enc*"
+| KEEP @timestamp, host.name, user.name, process.parent.name, process.command_line

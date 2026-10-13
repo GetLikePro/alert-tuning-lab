@@ -1,0 +1,9 @@
+// LOOSE "BEFORE" RULE - deliberately naive. Do not deploy.
+// Name:      Rundll32 Execution
+// Technique: T1218.011 System Binary Proxy Execution: Rundll32
+// Logic:     any rundll32.exe process at all
+// Why naive: Windows itself runs rundll32 all day. This is the "alert on the LOLBin" rule.
+FROM logs-windows.sysmon_operational-*
+| WHERE event.code == "1"
+    AND process.name == "rundll32.exe"
+| KEEP @timestamp, host.name, user.name, process.parent.name, process.command_line

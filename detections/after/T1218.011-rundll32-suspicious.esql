@@ -1,0 +1,43 @@
+// TUNED "AFTER" RULE
+// Name:      Suspicious Rundll32 Execution
+// Technique: T1218.011 System Binary Proxy Execution: Rundll32
+// Before:    detections/before/T1218.011-rundll32.esql
+//
+// STRATEGY FLIPPED: allowlist -> behavior.
+//   The before rule alerted on ANY rundll32. Our data showed ~15 distinct built-in Windows
+//   DLL/entry-point pairs, run by Task Scheduler on every host. Excluding them one by one would
+//   need 15+ exclusions that break on the next Windows update. Instead, alert only when rundll32
+//   shows a behavior attackers rely on:
+//   A. A file path outside C:\Windows\System32 / SysWOW64 anywhere in the arguments
+//      (DLL in Temp, Public, Downloads, a UNC/WebDAV share, or passed to Control_RunDLL).
+//      Note: C:\Windows\Temp is deliberately NOT trusted - it is user-writable.
+//   B. A known proxy-execution entry point: a built-in function that launches other programs,
+//      installs INF files, runs script, or dumps process memory (comsvcs MiniDump = LSASS dump).
+//   C. Script protocols (javascript:, vbscript:) or a DLL export called by ordinal (,#N).
+//   D. No arguments at all - an empty rundll32 is a common process-injection host.
+//   Matches on PE OriginalFileName too, so a renamed rundll32 is still caught.
+//
+// GOTCHA: "#" is reserved in Elasticsearch (Lucene) regex - it matches nothing. Escape it as \#.
+//   The first draft of check C used a bare "#" and silently never matched; a unit test caught it.
+//
+// TRADE-OFF: this is a denylist of techniques. A NEW abuse of a System32 DLL that is not in list B
+//   will be missed. Revisit list B when new LOLBAS entries for rundll32 are published
+//   (lolbas-project.github.io), and pair with a low-severity "rare rundll32 DLL,entrypoint"
+//   prevalence hunt to catch what B does not name.
+FROM logs-windows.sysmon_operational-*
+| WHERE event.code == "1"
+    AND (process.name == "rundll32.exe" OR process.pe.original_file_name == "RUNDLL32.EXE")
+| EVAL cl = TO_LOWER(process.command_line)
+// A: remove trusted system paths (including rundll32's own path), then look for any path left
+| EVAL non_system = REPLACE(cl, """c:\\windows\\(system32|syswow64)\\""", "")
+| EVAL a_path = non_system RLIKE """.*([a-z]:\\|\\\\|\.\.?\\).*""",
+       b_entry = cl LIKE "*url.dll*fileprotocolhandler*" OR cl LIKE "*url.dll*openurl*"
+              OR cl LIKE "*shell32*shellexec_rundll*" OR cl LIKE "*advpack*launchinfsection*"
+              OR cl LIKE "*advpack*registerocx*" OR cl LIKE "*setupapi*installhinfsection*"
+              OR cl LIKE "*syssetup*setupinfobjectinstallaction*" OR cl LIKE "*zipfldr*routethecall*"
+              OR cl LIKE "*pcwutl*launchapplication*" OR cl LIKE "*comsvcs*minidump*"
+              OR cl LIKE "*mshtml*runhtmlapplication*" OR cl LIKE "*desk.cpl*installscreensaver*",
+       c_script = cl LIKE "*javascript:*" OR cl LIKE "*vbscript:*" OR cl RLIKE """.*,\#[0-9]+.*""",
+       d_empty = cl RLIKE """.?(c:\\windows\\(system32|syswow64)\\)?rundll32(\.exe)?.? *"""
+| WHERE COALESCE(a_path OR b_entry OR c_script OR d_empty, false)
+| KEEP @timestamp, host.name, user.name, process.parent.name, process.command_line

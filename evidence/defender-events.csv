@@ -1,0 +1,103 @@
+"TimeUtc","Id","Message"
+"2026-10-12T19:09:57.0659514Z","1117","Microsoft Defender Antivirus has detected malware or potentially unwanted software using Defender security intelligence and applied the remediation action defined in the security settings.
+ For more information please see the following:
+https://go.microsoft.com/fwlink/?linkid=37020&name=Trojan:Win32/Powessere.G&threatid=2147725444&enterprise=0
+ 	Name: Trojan:Win32/Powessere.G
+ 	ID: 2147725444
+ 	Severity: Severe
+ 	Category: Trojan
+ 	Path: CmdLine:_C:\Windows\System32\cmd.exe /c rundll32 vbscript:\..\mshtml,RunHTMLApplication +String(CreateObject(WScript.Shell).Run(calc.exe),0)
+ 	Detection Origin: Unknown
+ 	Detection Type: Concrete
+ 	Detection Source: System
+ 	User: NT AUTHORITY\SYSTEM
+ 	Process Name: Unknown
+ 	Action: Remove
+ 	Action Status:  No additional actions required
+ 	Error Code: 0x00000000
+ 	Error description: The operation completed successfully. 
+ 	Security intelligence Version: AV: 1.459.688.0, AS: 1.459.688.0, NIS: 1.459.688.0
+ 	Engine Version: AM: 1.1.26080.3, NIS: 1.1.26080.3"
+"2026-10-12T19:09:45.3143739Z","1116","Microsoft Defender Antivirus has detected malware or other potentially unwanted software.
+ For more information please see the following:
+https://go.microsoft.com/fwlink/?linkid=37020&name=Trojan:Win32/Powessere.G&threatid=2147725444&enterprise=0
+ 	Name: Trojan:Win32/Powessere.G
+ 	ID: 2147725444
+ 	Severity: Severe
+ 	Category: Trojan
+ 	Path: CmdLine:_C:\Windows\System32\cmd.exe /c rundll32 vbscript:\..\mshtml,RunHTMLApplication +String(CreateObject(WScript.Shell).Run(calc.exe),0)
+ 	Detection Origin: Unknown
+ 	Detection Type: Concrete
+ 	Detection Source: System
+ 	User: NT AUTHORITY\SYSTEM
+ 	Process Name: Unknown
+ 	Security intelligence Version: AV: 1.459.688.0, AS: 1.459.688.0, NIS: 1.459.688.0
+ 	Engine Version: AM: 1.1.26080.3, NIS: 1.1.26080.3"
+"2026-10-12T19:05:50.7395047Z","1117","Microsoft Defender Antivirus has detected malware or potentially unwanted software using Defender security intelligence and applied the remediation action defined in the security settings.
+ For more information please see the following:
+https://go.microsoft.com/fwlink/?linkid=37020&name=HackTool:PowerShell/LsassDumper.A!amsi&threatid=2147749178&enterprise=0
+ 	Name: HackTool:PowerShell/LsassDumper.A!amsi
+ 	ID: 2147749178
+ 	Severity: High
+ 	Category: Tool
+ 	Path: amsi:_C:\Users\Admin\Documents\WindowsPowerShell\Modules\AtomicTestHarnesses\1.12.0.0\Windows\TestHarnesses\T1003.001_DumpLSASS\DumpLSASS.ps1
+ 	Detection Origin: Unknown
+ 	Detection Type: Concrete
+ 	Detection Source: AMSI
+ 	User: NT AUTHORITY\SYSTEM
+ 	Process Name: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+ 	Action: Quarantine
+ 	Action Status:  No additional actions required
+ 	Error Code: 0x00000000
+ 	Error description: The operation completed successfully. 
+ 	Security intelligence Version: AV: 1.459.688.0, AS: 1.459.688.0, NIS: 1.459.688.0
+ 	Engine Version: AM: 1.1.26080.3, NIS: 1.1.26080.3"
+"2026-10-12T19:05:41.1442761Z","1116","Microsoft Defender Antivirus has detected malware or other potentially unwanted software.
+ For more information please see the following:
+https://go.microsoft.com/fwlink/?linkid=37020&name=HackTool:PowerShell/LsassDumper.A!amsi&threatid=2147749178&enterprise=0
+ 	Name: HackTool:PowerShell/LsassDumper.A!amsi
+ 	ID: 2147749178
+ 	Severity: High
+ 	Category: Tool
+ 	Path: amsi:_C:\Users\Admin\Documents\WindowsPowerShell\Modules\AtomicTestHarnesses\1.12.0.0\Windows\TestHarnesses\T1003.001_DumpLSASS\DumpLSASS.ps1
+ 	Detection Origin: Unknown
+ 	Detection Type: Concrete
+ 	Detection Source: AMSI
+ 	User: WINDOWS-LAB\Admin
+ 	Process Name: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+ 	Security intelligence Version: AV: 1.459.688.0, AS: 1.459.688.0, NIS: 1.459.688.0
+ 	Engine Version: AM: 1.1.26080.3, NIS: 1.1.26080.3"
+"2026-10-12T19:03:52.7833940Z","1117","Microsoft Defender Antivirus has detected malware or potentially unwanted software using Defender security intelligence and applied the remediation action defined in the security settings.
+ For more information please see the following:
+https://go.microsoft.com/fwlink/?linkid=37020&name=Trojan:Win32/Commandrob.A!ml&threatid=2147849223&enterprise=0
+ 	Name: Trojan:Win32/Commandrob.A!ml
+ 	ID: 2147849223
+ 	Severity: Severe
+ 	Category: Trojan
+ 	Path: CmdLine:_C:\Windows\System32\cmd.exe /c reg add HKCU\SOFTWARE\ATOMIC-T1053.005 /v test /t REG_SZ /d cGluZyAxMjcuMC4wLjE= /f & schtasks.exe /Create /F /TN ATOMIC-T1053.005 /TR cmd /c start /min """" powershell.exe -Command IEX([System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String((Get-ItemProperty -Path HKCU:\\SOFTWARE\\ATOMIC-T1053.005).test))) /sc daily /st 07:4
+ 	Detection Origin: Unknown
+ 	Detection Type: FastPath
+ 	Detection Source: System
+ 	User: NT AUTHORITY\SYSTEM
+ 	Process Name: Unknown
+ 	Action: Remove
+ 	Action Status:  No additional actions required
+ 	Error Code: 0x00000000
+ 	Error description: The operation completed successfully. 
+ 	Security intelligence Version: AV: 1.459.688.0, AS: 1.459.688.0, NIS: 1.459.688.0
+ 	Engine Version: AM: 1.1.26080.3, NIS: 1.1.26080.3"
+"2026-10-12T19:03:40.3709441Z","1116","Microsoft Defender Antivirus has detected malware or other potentially unwanted software.
+ For more information please see the following:
+https://go.microsoft.com/fwlink/?linkid=37020&name=Trojan:Win32/Commandrob.A!ml&threatid=2147849223&enterprise=0
+ 	Name: Trojan:Win32/Commandrob.A!ml
+ 	ID: 2147849223
+ 	Severity: Severe
+ 	Category: Trojan
+ 	Path: CmdLine:_C:\Windows\System32\cmd.exe /c reg add HKCU\SOFTWARE\ATOMIC-T1053.005 /v test /t REG_SZ /d cGluZyAxMjcuMC4wLjE= /f & schtasks.exe /Create /F /TN ATOMIC-T1053.005 /TR cmd /c start /min """" powershell.exe -Command IEX([System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String((Get-ItemProperty -Path HKCU:\\SOFTWARE\\ATOMIC-T1053.005).test))) /sc daily /st 07:4
+ 	Detection Origin: Unknown
+ 	Detection Type: FastPath
+ 	Detection Source: System
+ 	User: NT AUTHORITY\SYSTEM
+ 	Process Name: Unknown
+ 	Security intelligence Version: AV: 1.459.688.0, AS: 1.459.688.0, NIS: 1.459.688.0
+ 	Engine Version: AM: 1.1.26080.3, NIS: 1.1.26080.3"

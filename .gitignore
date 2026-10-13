@@ -1,0 +1,8 @@
+# Private notes and handoffs: never published
+*.local.*
+# Lab secrets
+credentials.txt
+generators/enrollment-token.txt
+.env
+# Python
+__pycache__/

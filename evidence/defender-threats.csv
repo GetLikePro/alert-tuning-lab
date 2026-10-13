@@ -1,0 +1,4 @@
+"ThreatID","ThreatName","SeverityID","IsActive","DidThreatExecute","Resources"
+"2147725444","Trojan:Win32/Powessere.G","5","False","False",""
+"2147749178","HackTool:PowerShell/LsassDumper.A!amsi","4","False","True",""
+"2147849223","Trojan:Win32/Commandrob.A!ml","5","False","False",""
