@@ -80,17 +80,7 @@ ordinals, or an empty command line.
   `.esql` files to Elastic Security as ES|QL detection rules and replays them over the window
   with Kibana's backfill. The detection engine reproduced the offline counts exactly.
 
-## Limits
-Stated plainly, because a clear limit beats a confident overclaim:
-- **Tuned and validated on the same data window.** "Every remaining alert was an attack" holds for
-  this window only; a held-out window has not been tested yet.
-- **Thin baseline:** data exists for 17 hours, with all 3 hosts together for 7.
-- **The noise is synthetic and self-written,** so its shape was known in advance.
-- **3 hosts** make prevalence baselining meaningless, so it was considered and rejected.
-- **2 of 8 attacks were blocked by Microsoft Defender** before any process started, so they
-  produced no telemetry to score. The SIEM didn't collect Defender's log, so this was confirmed
-  afterwards from the VM ([`evidence/`](evidence/)).
-- **No container workloads.**
+
 
 Full detail in [`RESULTS.md`](RESULTS.md), under "What surprised us" and "What we could not do".
 
